@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { AnalyzedAlert } from "./analyzer";
 
-const PORT = Number(process.env.ALERT_PORT) || 3001;
+const PORT = Number(process.env.PORT) || Number(process.env.ALERT_PORT) || 3001;
 
 export class AlertServer {
   private wss: WebSocketServer;
