@@ -61,6 +61,9 @@ let alertCount = 0;
 let actionCount = 0;
 let totalCollateralAdded = 0;
 let isSending = false; // tx çakışmasını önle
+let lastActionTime = 0;
+const ACTION_COOLDOWN = 30_000; // 30 saniye cooldown — gereksiz tx spam'i önler
+let skippedByCooldown = 0;
 
 // ── Gerçek on-chain aksiyon ──
 async function addEmergencyCollateral(alert: Alert) {
@@ -148,14 +151,33 @@ function connect() {
     console.log(`  CommitState: ${alert.commitState} (${alert.alertConfidence})`);
 
     // ── Karar ver ──
-    // Testnet'te büyük tx nadir — medium+ için aksiyon al
-    // Mainnet'te bu eşik high/critical'a çekilir
+    // Akıllı cooldown: her alert'e tx atmak yerine 30sn'de max 1 aksiyon
+    // Gerçek dünyada bot gas israf etmez, sadece gerçekten gerektiğinde hareket eder
+    const timeSinceLastAction = Date.now() - lastActionTime;
+    const cooldownReady = timeSinceLastAction >= ACTION_COOLDOWN;
+
     if (alert.severity === "critical" || alert.severity === "high") {
-      console.log(`  🚨 CRITICAL/HIGH → Acil on-chain aksiyon...`);
-      await addEmergencyCollateral(alert);
+      if (cooldownReady) {
+        console.log(`  🚨 CRITICAL/HIGH → Acil on-chain aksiyon...`);
+        await addEmergencyCollateral(alert);
+        lastActionTime = Date.now();
+      } else {
+        skippedByCooldown++;
+        const remaining = Math.ceil((ACTION_COOLDOWN - timeSinceLastAction) / 1000);
+        console.log(`  🚨 CRITICAL/HIGH → Cooldown aktif (${remaining}sn kaldı) — aksiyon atlandı`);
+        console.log();
+      }
     } else if (alert.severity === "medium") {
-      console.log(`  ⚡ MEDIUM → Koruyucu teminat ekleniyor...`);
-      await addEmergencyCollateral(alert);
+      if (cooldownReady) {
+        console.log(`  ⚡ MEDIUM → Koruyucu teminat ekleniyor...`);
+        await addEmergencyCollateral(alert);
+        lastActionTime = Date.now();
+      } else {
+        skippedByCooldown++;
+        const remaining = Math.ceil((ACTION_COOLDOWN - timeSinceLastAction) / 1000);
+        console.log(`  ⏳ MEDIUM → Cooldown aktif (${remaining}sn kaldı) — izleniyor`);
+        console.log();
+      }
     } else {
       console.log(`  ✓ LOW → Güvenli`);
       console.log();
@@ -204,5 +226,5 @@ main().catch(console.error);
 
 // Stats
 setInterval(() => {
-  console.log(`\n📊 RiskBot: ${alertCount} alert | ${actionCount} on-chain aksiyon | ${totalCollateralAdded.toFixed(3)} MON eklendi\n`);
+  console.log(`\n📊 RiskBot: ${alertCount} alert | ${actionCount} on-chain aksiyon | ${skippedByCooldown} cooldown skip | ${totalCollateralAdded.toFixed(3)} MON eklendi\n`);
 }, 30000);
