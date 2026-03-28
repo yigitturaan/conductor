@@ -36,7 +36,7 @@ export interface ConductorAlert {
 }
 
 export interface ConductorConfig {
-  url?: string;           // default: ws://localhost:3001
+  url?: string;           // default: wss://conductor-production-b213.up.railway.app
   autoReconnect?: boolean; // default: true
   minSeverity?: "low" | "medium" | "high" | "critical"; // default: "low"
   types?: string[];       // filter by tx type: ["swap", "large_transfer", "contract_call"]
@@ -53,7 +53,7 @@ export class ConductorClient extends EventEmitter {
   constructor(config: ConductorConfig = {}) {
     super();
     this.config = {
-      url: config.url || "ws://localhost:3001",
+      url: config.url || "wss://conductor-production-b213.up.railway.app",
       autoReconnect: config.autoReconnect !== false,
       minSeverity: config.minSeverity || "low",
       types: config.types || [],

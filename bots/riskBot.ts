@@ -7,7 +7,7 @@ import * as path from "path";
 
 dotenv.config();
 
-const ALERT_SERVER_URL = process.env.ALERT_WS_URL || "ws://localhost:3001";
+const ALERT_SERVER_URL = process.env.ALERT_WS_URL || "wss://conductor-production-b213.up.railway.app";
 
 // ── Monad Testnet ──
 const monadTestnet = defineChain({
