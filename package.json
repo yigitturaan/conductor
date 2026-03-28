@@ -1,0 +1,36 @@
+{
+  "name": "conductor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "bot:risk": "ts-node bots/riskBot.ts",
+    "bot:whale": "ts-node bots/whaleBot.ts",
+    "bot:mev": "ts-node bots/mevBot.ts",
+    "test:watcher": "ts-node src/testWatcher.ts",
+    "test:filter": "ts-node src/testFilter.ts",
+    "test:simulator": "ts-node src/testSimulator.ts",
+    "test:analyzer": "ts-node src/testAnalyzer.ts",
+    "test:alert": "ts-node src/testAlertServer.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "openai": "^6.33.0",
+    "viem": "^2.47.6",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/ws": "^8.18.1",
+    "solc": "^0.8.34",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
+  }
+}

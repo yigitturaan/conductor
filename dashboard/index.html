@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conductor — AI Orchestrator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #030305;
+      --bg-1: #08080f;
+      --bg-2: #0d0d18;
+      --bg-3: #111122;
+      --bg-4: #161630;
+      --border-1: #1a1a35;
+      --border-2: #252550;
+      --accent: #8b5cf6;
+      --accent-dim: #7c3aed;
+      --accent-glow: rgba(139, 92, 246, 0.15);
+      --accent-glow-strong: rgba(139, 92, 246, 0.3);
+      --text-0: #f1f5f9;
+      --text-1: #cbd5e1;
+      --text-2: #64748b;
+      --text-3: #334155;
+      --green: #22c55e;
+      --green-dim: rgba(34, 197, 94, 0.12);
+      --yellow: #eab308;
+      --yellow-dim: rgba(234, 179, 8, 0.12);
+      --orange: #f97316;
+      --orange-dim: rgba(249, 115, 22, 0.12);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.12);
+      --blue: #3b82f6;
+      --blue-dim: rgba(59, 130, 246, 0.12);
+      --cyan: #06b6d4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-0);
+      color: var(--text-0);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ═══ HEADER ═══ */
+    .header {
+      background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
+      border-bottom: 1px solid var(--border-1);
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    .logo-mark {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-dim), #a855f7);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 15px; color: #fff;
+      box-shadow: 0 0 24px var(--accent-glow-strong), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+
+    .header-title { line-height: 1.2; }
+    .header-title h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.4px; }
+    .header-title p { font-size: 11px; color: var(--text-2); font-weight: 400; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+
+    .chain-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-1);
+    }
+
+    .chain-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--red);
+      transition: all 0.3s;
+    }
+    .live-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+      animation: livePulse 2s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%,100% { box-shadow: 0 0 8px var(--green); }
+      50% { box-shadow: 0 0 18px var(--green), 0 0 40px rgba(34,197,94,0.2); }
+    }
+
+    /* ═══ PIPELINE ═══ */
+    .pipeline {
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+      padding: 10px 32px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-1);
+    }
+
+    .pipe-node {
+      font-size: 10px; font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 5px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      color: var(--text-3);
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .pipe-node.on {
+      background: var(--accent-glow);
+      border-color: var(--accent-dim);
+      color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .pipe-arrow { color: var(--border-2); font-size: 11px; }
+    .pipe-arrow.on { color: var(--accent-dim); }
+
+    /* ═══ STATS ═══ */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      padding: 16px 32px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-1);
+    }
+
+    .stat {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--border-2);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .stat.purple::before { background: var(--accent); }
+    .stat.red::before { background: var(--red); }
+    .stat.green::before { background: var(--green); }
+    .stat.blue::before { background: var(--blue); }
+
+    .stat-lbl {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-2);
+      margin-bottom: 6px; font-weight: 500;
+    }
+
+    .stat-num {
+      font-size: 22px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-0);
+    }
+    .stat-num.purple { color: var(--accent); }
+    .stat-num.red { color: var(--red); }
+    .stat-num.green { color: var(--green); }
+    .stat-num.blue { color: var(--blue); }
+    .stat-num.yellow { color: var(--yellow); }
+
+    /* ═══ CHARTS ═══ */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      gap: 12px;
+      padding: 14px 32px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-1);
+    }
+
+    .chart-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .chart-title {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--text-2); margin-bottom: 12px;
+    }
+
+    /* Donut Chart */
+    .donut-wrap {
+      display: flex; align-items: center; gap: 20px;
+    }
+
+    .donut-svg { width: 90px; height: 90px; }
+
+    .donut-legend { display: flex; flex-direction: column; gap: 6px; }
+    .donut-legend .leg {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-1);
+    }
+    .leg-dot {
+      width: 8px; height: 8px; border-radius: 2px;
+    }
+    .leg-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600; font-size: 11px; margin-left: auto;
+    }
+
+    /* Bar Chart — alert timeline */
+    .bar-chart {
+      display: flex; align-items: flex-end; gap: 3px;
+      height: 70px; padding-top: 6px;
+    }
+
+    .bar-col {
+      flex: 1; min-width: 6px; border-radius: 3px 3px 0 0;
+      background: var(--accent); opacity: 0.7;
+      transition: height 0.3s, opacity 0.2s;
+      position: relative;
+    }
+    .bar-col:hover { opacity: 1; }
+    .bar-col.has-high { background: linear-gradient(180deg, var(--orange) 0%, var(--accent) 100%); }
+    .bar-col.has-critical { background: linear-gradient(180deg, var(--red) 0%, var(--orange) 100%); }
+
+    .bar-labels {
+      display: flex; justify-content: space-between;
+      font-size: 9px; color: var(--text-3); margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Type split */
+    .type-bars { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+
+    .type-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .type-label {
+      font-size: 11px; color: var(--text-2); width: 65px;
+      font-weight: 500;
+    }
+    .type-track {
+      flex: 1; height: 20px; background: var(--bg-0);
+      border-radius: 4px; overflow: hidden; position: relative;
+    }
+    .type-fill {
+      height: 100%; border-radius: 4px;
+      transition: width 0.4s ease;
+      display: flex; align-items: center; padding-left: 8px;
+      font-size: 10px; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace; color: #fff;
+    }
+    .type-fill.swap { background: linear-gradient(90deg, var(--accent-dim), var(--accent)); }
+    .type-fill.transfer { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+
+    /* ═══ MAIN ═══ */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      min-height: calc(100vh - 280px);
+    }
+
+    /* ═══ FEED ═══ */
+    .feed {
+      padding: 18px 28px;
+      overflow-y: auto;
+      max-height: calc(100vh - 280px);
+    }
+
+    .feed-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .feed-head h2 {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-2);
+    }
+    .feed-count {
+      font-size: 11px; color: var(--text-3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .alert-list { display: flex; flex-direction: column; gap: 6px; }
+
+    /* Alert Card */
+    .a-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      animation: cardIn 0.25s ease;
+      transition: all 0.15s;
+    }
+    .a-card:hover { background: var(--bg-3); border-color: var(--border-2); }
+
+    .a-card.sev-critical { border-left: 3px solid var(--red); }
+    .a-card.sev-high { border-left: 3px solid var(--orange); }
+    .a-card.sev-medium { border-left: 3px solid var(--yellow); }
+    .a-card.sev-low { border-left: 3px solid var(--green); }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .a-row1 {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .a-row1-left { display: flex; align-items: center; gap: 8px; }
+
+    .sev-pill {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; padding: 3px 8px; border-radius: 4px;
+    }
+    .sev-pill.critical { background: var(--red-dim); color: var(--red); }
+    .sev-pill.high { background: var(--orange-dim); color: var(--orange); }
+    .sev-pill.medium { background: var(--yellow-dim); color: var(--yellow); }
+    .sev-pill.low { background: var(--green-dim); color: var(--green); }
+
+    .a-type { font-size: 13px; font-weight: 600; }
+    .a-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--green); }
+
+    .a-row1-right { display: flex; align-items: center; gap: 8px; }
+
+    .commit-pill {
+      font-size: 9px; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px; border-radius: 4px;
+      background: var(--accent-glow); color: var(--accent);
+    }
+
+    .a-latency {
+      font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-3);
+    }
+
+    .a-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4px 16px; font-size: 11px;
+      margin-bottom: 8px;
+    }
+    .a-grid .k { color: var(--text-3); }
+    .a-grid .v { color: var(--text-1); font-family: 'JetBrains Mono', monospace; }
+
+    .a-reason {
+      font-size: 11px; line-height: 1.55;
+      color: var(--accent);
+      background: var(--accent-glow);
+      padding: 8px 12px; border-radius: 6px;
+      border-left: 2px solid var(--accent-dim);
+    }
+
+    .a-chips { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+    .a-chip {
+      font-size: 9px; font-weight: 500; padding: 2px 8px;
+      border-radius: 3px; background: var(--bg-4); color: var(--text-2);
+      border: 1px solid var(--border-1);
+    }
+
+    /* ═══ BOT PANEL ═══ */
+    .bots {
+      background: var(--bg-1);
+      border-left: 1px solid var(--border-1);
+      padding: 18px 16px;
+      overflow-y: auto;
+      max-height: calc(100vh - 280px);
+    }
+
+    .bots-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-2); margin-bottom: 14px;
+    }
+
+    .bot {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+    .bot:hover { border-color: var(--border-2); }
+
+    .bot-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+    .bot-ico {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: grid; place-items: center; font-size: 14px;
+    }
+    .bot-ico.risk { background: var(--red-dim); }
+    .bot-ico.whale { background: var(--blue-dim); }
+    .bot-ico.mev { background: var(--orange-dim); }
+
+    .bot-info .bot-name { font-size: 12px; font-weight: 600; }
+    .bot-info .bot-sub { font-size: 10px; color: var(--text-3); }
+
+    .bot-nums { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+
+    .bot-n {
+      background: var(--bg-0); border-radius: 6px; padding: 8px; text-align: center;
+    }
+    .bot-n .n {
+      font-size: 16px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .bot-n .l { font-size: 9px; color: var(--text-3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+    .bot-log {
+      background: var(--bg-0); border-radius: 6px; padding: 6px 8px;
+      max-height: 100px; overflow-y: auto;
+      font-size: 10px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-3); line-height: 1.6;
+    }
+
+    .log-line { border-bottom: 1px solid var(--border-1); padding: 2px 0; }
+    .log-line:last-child { border: none; }
+    .log-line.act { color: var(--red); }
+    .log-line.whl { color: var(--blue); }
+    .log-line.shd { color: var(--green); }
+    .log-line.wrn { color: var(--orange); }
+
+    /* ═══ EMPTY ═══ */
+    .empty {
+      text-align: center; padding: 80px 20px; color: var(--text-3);
+    }
+    .empty h3 { font-size: 14px; color: var(--text-2); margin-bottom: 6px; }
+    .empty p { font-size: 12px; }
+    .spin {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border-2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      animation: sp 0.8s linear infinite;
+    }
+    @keyframes sp { to { transform: rotate(360deg); } }
+
+    /* ═══ SCROLLBAR ═══ */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-mark">C</div>
+      <div class="header-title">
+        <h1>Conductor</h1>
+        <p>AI-Native Speculative Execution Orchestrator</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="chain-pill">
+        <span class="chain-dot"></span>
+        Monad Testnet
+      </div>
+      <div class="live-badge">
+        <span class="live-dot" id="liveDot"></span>
+        <span id="liveText">Offline</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="pipeline">
+    <div class="pipe-node on" id="pw">Watcher</div>
+    <span class="pipe-arrow" id="pa1">&rarr;</span>
+    <div class="pipe-node" id="pf">Filter</div>
+    <span class="pipe-arrow" id="pa2">&rarr;</span>
+    <div class="pipe-node" id="ps">Simulator</div>
+    <span class="pipe-arrow" id="pa3">&rarr;</span>
+    <div class="pipe-node" id="pai">AI Analyzer</div>
+    <span class="pipe-arrow" id="pa4">&rarr;</span>
+    <div class="pipe-node" id="pb">Alert Server</div>
+    <span class="pipe-arrow" id="pa5">&rarr;</span>
+    <div class="pipe-node" id="pbot">3 Bots</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat purple">
+      <div class="stat-lbl">Alerts</div>
+      <div class="stat-num purple" id="sTotal">0</div>
+    </div>
+    <div class="stat red">
+      <div class="stat-lbl">High Risk</div>
+      <div class="stat-num red" id="sHigh">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Avg Latency</div>
+      <div class="stat-num" id="sLat">--</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Last Block</div>
+      <div class="stat-num" id="sBlock">--</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-lbl">Swaps</div>
+      <div class="stat-num green" id="sSwap">0</div>
+    </div>
+    <div class="stat blue">
+      <div class="stat-lbl">Whale Txs</div>
+      <div class="stat-num blue" id="sWhale">0</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <!-- Donut: Severity Distribution -->
+    <div class="chart-card">
+      <div class="chart-title">Severity Distribution</div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 36 36" id="donutSvg">
+          <circle cx="18" cy="18" r="14" fill="none" stroke="var(--border-1)" stroke-width="4"/>
+          <circle id="dCrit" cx="18" cy="18" r="14" fill="none" stroke="var(--red)" stroke-width="4"
+            stroke-dasharray="0 100" stroke-dashoffset="25" stroke-linecap="round" style="transition: stroke-dasharray 0.5s"/>
+          <circle id="dHigh" cx="18" cy="18" r="14" fill="none" stroke="var(--orange)" stroke-width="4"
+            stroke-dasharray="0 100" stroke-dashoffset="25" stroke-linecap="round" style="transition: stroke-dasharray 0.5s"/>
+          <circle id="dMed" cx="18" cy="18" r="14" fill="none" stroke="var(--yellow)" stroke-width="4"
+            stroke-dasharray="0 100" stroke-dashoffset="25" stroke-linecap="round" style="transition: stroke-dasharray 0.5s"/>
+          <circle id="dLow" cx="18" cy="18" r="14" fill="none" stroke="var(--green)" stroke-width="4"
+            stroke-dasharray="0 100" stroke-dashoffset="25" stroke-linecap="round" style="transition: stroke-dasharray 0.5s"/>
+          <text x="18" y="19" text-anchor="middle" dominant-baseline="middle"
+            font-size="6" font-weight="700" fill="var(--text-0)" font-family="JetBrains Mono" id="donutCenter">0</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="leg"><span class="leg-dot" style="background:var(--red)"></span>Critical<span class="leg-num" id="lcrit">0</span></div>
+          <div class="leg"><span class="leg-dot" style="background:var(--orange)"></span>High<span class="leg-num" id="lhigh">0</span></div>
+          <div class="leg"><span class="leg-dot" style="background:var(--yellow)"></span>Medium<span class="leg-num" id="lmed">0</span></div>
+          <div class="leg"><span class="leg-dot" style="background:var(--green)"></span>Low<span class="leg-num" id="llow">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bar: Alert Timeline -->
+    <div class="chart-card">
+      <div class="chart-title">Alert Timeline (last 30 blocks)</div>
+      <div class="bar-chart" id="barChart"></div>
+      <div class="bar-labels">
+        <span id="barStart">--</span>
+        <span>Blocks</span>
+        <span id="barEnd">--</span>
+      </div>
+    </div>
+
+    <!-- Type Split -->
+    <div class="chart-card">
+      <div class="chart-title">Transaction Types</div>
+      <div class="type-bars">
+        <div class="type-row">
+          <span class="type-label">Swaps</span>
+          <div class="type-track">
+            <div class="type-fill swap" id="fillSwap" style="width: 0%">0</div>
+          </div>
+        </div>
+        <div class="type-row">
+          <span class="type-label">Transfers</span>
+          <div class="type-track">
+            <div class="type-fill transfer" id="fillTransfer" style="width: 0%">0</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 14px; display: flex; justify-content: space-between; font-size: 10px; color: var(--text-3);">
+        <span>Total Volume</span>
+        <span style="font-family: 'JetBrains Mono', monospace; color: var(--green);" id="totalVol">$0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="feed">
+      <div class="feed-head">
+        <h2>Live Alert Feed</h2>
+        <span class="feed-count" id="feedN">0 alerts</span>
+      </div>
+      <div class="alert-list" id="aList">
+        <div class="empty" id="emptyState">
+          <div class="spin"></div>
+          <h3>Waiting for alerts...</h3>
+          <p>Run <code style="color:var(--accent)">npm start</code> to start pipeline</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bots">
+      <div class="bots-title">Active Bots (3)</div>
+
+      <!-- Risk Bot -->
+      <div class="bot">
+        <div class="bot-head">
+          <div class="bot-ico risk">&#9888;&#65039;</div>
+          <div class="bot-info">
+            <div class="bot-name">Risk Bot</div>
+            <div class="bot-sub">Collateral protection agent</div>
+          </div>
+        </div>
+        <div class="bot-nums">
+          <div class="bot-n"><div class="n" id="brA" style="color:var(--red)">0</div><div class="l">Alerts</div></div>
+          <div class="bot-n"><div class="n" id="brAct" style="color:var(--orange)">0</div><div class="l">Actions</div></div>
+        </div>
+        <div class="bot-log" id="brLog"></div>
+      </div>
+
+      <!-- Whale Bot -->
+      <div class="bot">
+        <div class="bot-head">
+          <div class="bot-ico whale">&#128011;</div>
+          <div class="bot-info">
+            <div class="bot-name">Whale Bot</div>
+            <div class="bot-sub">Large transfer tracker</div>
+          </div>
+        </div>
+        <div class="bot-nums">
+          <div class="bot-n"><div class="n" id="bwA" style="color:var(--blue)">0</div><div class="l">Whales</div></div>
+          <div class="bot-n"><div class="n" id="bwV" style="color:var(--cyan)">$0</div><div class="l">Volume</div></div>
+        </div>
+        <div class="bot-log" id="bwLog"></div>
+      </div>
+
+      <!-- MEV Bot -->
+      <div class="bot">
+        <div class="bot-head">
+          <div class="bot-ico mev">&#128737;&#65039;</div>
+          <div class="bot-info">
+            <div class="bot-name">MEV Shield</div>
+            <div class="bot-sub">Sandwich & frontrun defense</div>
+          </div>
+        </div>
+        <div class="bot-nums">
+          <div class="bot-n"><div class="n" id="bmR" style="color:var(--orange)">0</div><div class="l">Risks</div></div>
+          <div class="bot-n"><div class="n" id="bmB" style="color:var(--green)">0</div><div class="l">Shielded</div></div>
+        </div>
+        <div class="bot-log" id="bmLog"></div>
+      </div>
+      <!-- API Info -->
+      <div style="margin-top: 16px; border-top: 1px solid var(--border-1); padding-top: 14px;">
+        <div class="bots-title">Integrate Your Bot</div>
+        <div style="background: var(--bg-0); border-radius: 8px; padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-2); line-height: 1.7; border: 1px solid var(--border-1);">
+          <span style="color: var(--text-3);">// 3 lines to connect your AI</span><br>
+          <span style="color: var(--accent);">const</span> c = <span style="color: var(--accent);">new</span> <span style="color: var(--yellow);">ConductorClient</span>();<br>
+          c.<span style="color: var(--yellow);">on</span>(<span style="color: var(--green);">"alert"</span>, (a) => {<br>
+          &nbsp;&nbsp;<span style="color: var(--text-3);">// a.severity, a.aiReasoning</span><br>
+          &nbsp;&nbsp;<span style="color: var(--text-3);">// Your AI decides + acts</span><br>
+          });<br><br>
+          <span style="color: var(--text-3);">// Or filter by severity:</span><br>
+          c.<span style="color: var(--yellow);">on</span>(<span style="color: var(--green);">"critical"</span>, actFast);<br>
+          c.<span style="color: var(--yellow);">on</span>(<span style="color: var(--green);">"high_risk"</span>, hedge);
+        </div>
+        <div style="font-size: 10px; color: var(--text-3); margin-top: 8px; line-height: 1.5;">
+          <code style="color: var(--accent);">src/sdk.ts</code> — Full SDK with types<br>
+          <code style="color: var(--accent);">bots/exampleBot.ts</code> — Copy & customize
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const aList = document.getElementById('aList');
+const liveDot = document.getElementById('liveDot');
+const liveText = document.getElementById('liveText');
+
+const S = {
+  total: 0, high: 0, swaps: 0, whales: 0, lats: [],
+  brA: 0, brAct: 0,
+  bwA: 0, bwV: 0,
+  bmR: 0, bmB: 0,
+  // Charts
+  sev: { critical: 0, high: 0, medium: 0, low: 0 },
+  blocks: [], // {block, count, maxSev}
+  types: { swap: 0, transfer: 0 },
+  totalVol: 0,
+};
+
+// ── Chart: Donut ──
+function updDonut() {
+  const { critical, high, medium, low } = S.sev;
+  const t = critical + high + medium + low || 1;
+  const pC = (critical / t) * 100;
+  const pH = (high / t) * 100;
+  const pM = (medium / t) * 100;
+  const pL = (low / t) * 100;
+
+  let offset = 25;
+  const set = (id, pct) => {
+    document.getElementById(id).setAttribute('stroke-dasharray', `${pct} ${100 - pct}`);
+    document.getElementById(id).setAttribute('stroke-dashoffset', String(offset));
+    offset -= pct;
+  };
+  set('dCrit', pC);
+  set('dHigh', pH);
+  set('dMed', pM);
+  set('dLow', pL);
+
+  document.getElementById('donutCenter').textContent = String(t);
+  document.getElementById('lcrit').textContent = String(critical);
+  document.getElementById('lhigh').textContent = String(high);
+  document.getElementById('lmed').textContent = String(medium);
+  document.getElementById('llow').textContent = String(low);
+}
+
+// ── Chart: Bar Timeline ──
+function updBars(blockNum, severity) {
+  const blocks = S.blocks;
+  const existing = blocks.find(b => b.block === blockNum);
+  if (existing) {
+    existing.count++;
+    if (severity === 'critical') existing.maxSev = 'critical';
+    else if (severity === 'high' && existing.maxSev !== 'critical') existing.maxSev = 'high';
+  } else {
+    blocks.push({ block: blockNum, count: 1, maxSev: severity });
+  }
+  while (blocks.length > 30) blocks.shift();
+
+  const chart = document.getElementById('barChart');
+  const maxCount = Math.max(...blocks.map(b => b.count), 1);
+  chart.innerHTML = blocks.map(b => {
+    const h = Math.max((b.count / maxCount) * 100, 6);
+    const cls = b.maxSev === 'critical' ? 'has-critical' : b.maxSev === 'high' ? 'has-high' : '';
+    return `<div class="bar-col ${cls}" style="height:${h}%" title="Block #${b.block}: ${b.count} alerts"></div>`;
+  }).join('');
+
+  if (blocks.length > 0) {
+    document.getElementById('barStart').textContent = '#' + blocks[0].block;
+    document.getElementById('barEnd').textContent = '#' + blocks[blocks.length - 1].block;
+  }
+}
+
+// ── Chart: Type Split ──
+function updTypes(alert) {
+  if (alert.type === 'swap') S.types.swap++;
+  else S.types.transfer++;
+  S.totalVol += alert.valueUsd;
+
+  const total = S.types.swap + S.types.transfer || 1;
+  const swapPct = (S.types.swap / total) * 100;
+  const transPct = (S.types.transfer / total) * 100;
+
+  const fs = document.getElementById('fillSwap');
+  const ft = document.getElementById('fillTransfer');
+  fs.style.width = Math.max(swapPct, 4) + '%';
+  fs.textContent = S.types.swap;
+  ft.style.width = Math.max(transPct, 4) + '%';
+  ft.textContent = S.types.transfer;
+
+  const vol = S.totalVol >= 1000000 ? (S.totalVol/1000000).toFixed(1) + 'M' :
+              S.totalVol >= 1000 ? (S.totalVol/1000).toFixed(1) + 'K' :
+              S.totalVol.toFixed(0);
+  document.getElementById('totalVol').textContent = '$' + vol;
+}
+
+function log(id, txt, cls) {
+  const el = document.getElementById(id);
+  const d = document.createElement('div');
+  d.className = 'log-line' + (cls ? ' ' + cls : '');
+  d.textContent = txt;
+  el.insertBefore(d, el.firstChild);
+  while (el.children.length > 25) el.removeChild(el.lastChild);
+}
+
+function ts() {
+  return new Date().toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function bots(a) {
+  const t = ts();
+
+  // Risk Bot
+  S.brA++;
+  document.getElementById('brA').textContent = S.brA;
+
+  if (a.severity === 'critical') {
+    S.brAct++;
+    document.getElementById('brAct').textContent = S.brAct;
+    log('brLog', `${t} EMERGENCY: addCollateral() $${a.valueUsd.toFixed(0)} | ${a.affectedPool}`, 'act');
+  } else if (a.severity === 'high') {
+    S.brAct++;
+    document.getElementById('brAct').textContent = S.brAct;
+    log('brLog', `${t} ACTION: hedge position $${a.valueUsd.toFixed(0)}`, 'wrn');
+  } else if (a.severity === 'medium') {
+    log('brLog', `${t} WATCH: monitoring $${a.valueUsd.toFixed(0)} | ${a.severity}`);
+  } else {
+    log('brLog', `${t} OK: $${a.valueUsd.toFixed(0)} low risk`);
+  }
+
+  // Whale Bot
+  if (a.type === 'large_transfer' || a.valueUsd > 1000) {
+    S.bwA++;
+    S.bwV += a.valueUsd;
+    document.getElementById('bwA').textContent = S.bwA;
+    document.getElementById('bwV').textContent = '$' + (S.bwV >= 1000 ? (S.bwV/1000).toFixed(1) + 'K' : S.bwV.toFixed(0));
+    document.getElementById('sWhale').textContent = S.bwA;
+    log('bwLog', `${t} WHALE: $${a.valueUsd.toFixed(0)} | ${a.affectedPool}`, 'whl');
+  }
+
+  // MEV Bot
+  if (a.type === 'swap') {
+    if (a.estimatedPriceImpact > 2) {
+      S.bmR++;
+      S.bmB++;
+      document.getElementById('bmR').textContent = S.bmR;
+      document.getElementById('bmB').textContent = S.bmB;
+      log('bmLog', `${t} BLOCKED: sandwich risk ${a.estimatedPriceImpact}% impact`, 'shd');
+    } else if (a.estimatedPriceImpact > 0.5) {
+      S.bmR++;
+      document.getElementById('bmR').textContent = S.bmR;
+      log('bmLog', `${t} WARN: swap impact ${a.estimatedPriceImpact}%`, 'wrn');
+    } else {
+      log('bmLog', `${t} SAFE: swap $${a.valueUsd.toFixed(0)}`);
+    }
+  }
+}
+
+function updStats(a) {
+  S.total++;
+  document.getElementById('sTotal').textContent = S.total;
+  document.getElementById('feedN').textContent = S.total + ' alerts';
+
+  if (a.severity === 'critical' || a.severity === 'high') {
+    S.high++;
+    document.getElementById('sHigh').textContent = S.high;
+  }
+  if (a.type === 'swap') {
+    S.swaps++;
+    document.getElementById('sSwap').textContent = S.swaps;
+  }
+
+  S.lats.push(a.latencyMs);
+  if (S.lats.length > 50) S.lats.shift();
+  document.getElementById('sLat').textContent =
+    Math.round(S.lats.reduce((x,y) => x+y, 0) / S.lats.length) + 'ms';
+
+  document.getElementById('sBlock').textContent = '#' + a.blockNumber;
+
+  // Charts
+  S.sev[a.severity] = (S.sev[a.severity] || 0) + 1;
+  updDonut();
+  updBars(a.blockNumber, a.severity);
+  updTypes(a);
+
+  // pipeline flash
+  ['pf','ps','pai','pb','pbot','pa1','pa2','pa3','pa4','pa5'].forEach(id => {
+    document.getElementById(id).classList.add('on');
+  });
+  clearTimeout(window._pt);
+  window._pt = setTimeout(() => {
+    ['pf','ps','pa1','pa2'].forEach(id => document.getElementById(id).classList.remove('on'));
+  }, 1200);
+}
+
+function addCard(a) {
+  const e = document.getElementById('emptyState');
+  if (e) e.remove();
+
+  const c = document.createElement('div');
+  c.className = `a-card sev-${a.severity}`;
+  c.innerHTML = `
+    <div class="a-row1">
+      <div class="a-row1-left">
+        <span class="sev-pill ${a.severity}">${a.severity}</span>
+        <span class="a-type">${a.type === 'swap' ? 'Swap' : 'Transfer'}</span>
+        <span class="a-value">$${a.valueUsd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+      </div>
+      <div class="a-row1-right">
+        <span class="commit-pill">${a.commitState} ${a.alertConfidence}</span>
+        <span class="a-latency">${a.latencyMs}ms</span>
+      </div>
+    </div>
+    <div class="a-grid">
+      <span class="k">Block</span><span class="v">#${a.blockNumber}</span>
+      <span class="k">Impact</span><span class="v">${a.estimatedPriceImpact}%</span>
+      <span class="k">Pool</span><span class="v">${a.affectedPool}</span>
+      <span class="k">Confidence</span><span class="v">${(a.confidence * 100).toFixed(0)}%</span>
+    </div>
+    <div class="a-reason">${a.aiReasoning}</div>
+    <div class="a-chips">${a.suggestedActions.map(x => `<span class="a-chip">${x}</span>`).join('')}</div>
+  `;
+
+  aList.insertBefore(c, aList.firstChild);
+  while (aList.children.length > 60) aList.removeChild(aList.lastChild);
+
+  updStats(a);
+  bots(a);
+}
+
+function connect() {
+  const ws = new WebSocket('ws://localhost:3001');
+
+  ws.onopen = () => {
+    liveDot.classList.add('on');
+    liveText.textContent = 'Live';
+    liveText.style.color = 'var(--green)';
+  };
+
+  ws.onmessage = (ev) => {
+    const d = JSON.parse(ev.data);
+    if (d.type === 'alert') addCard(d.alert);
+    else if (d.type === 'history') d.alerts.forEach(addCard);
+  };
+
+  ws.onclose = () => {
+    liveDot.classList.remove('on');
+    liveText.textContent = 'Offline';
+    liveText.style.color = 'var(--text-3)';
+    setTimeout(connect, 3000);
+  };
+
+  ws.onerror = () => {};
+}
+
+connect();
+</script>
+</body>
+</html>
