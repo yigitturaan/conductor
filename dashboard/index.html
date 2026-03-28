@@ -339,10 +339,14 @@
     .bot { background: var(--bg-2); border: 1px solid var(--border-1); border-radius: 10px; padding: 14px; margin-bottom: 10px; transition: border-color 0.2s; }
     .bot:hover { border-color: var(--border-2); }
     .bot-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .bot-ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 14px; }
+    .bot-ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; }
+    .bot-ico svg { width: 16px; height: 16px; }
     .bot-ico.risk { background: var(--red-dim); }
+    .bot-ico.risk svg { stroke: var(--red); }
     .bot-ico.whale { background: var(--blue-dim); }
+    .bot-ico.whale svg { stroke: var(--blue); }
     .bot-ico.mev { background: var(--orange-dim); }
+    .bot-ico.mev svg { stroke: var(--orange); }
     .bot-info .bot-name { font-size: 12px; font-weight: 600; }
     .bot-info .bot-sub { font-size: 10px; color: var(--text-3); }
     .bot-nums { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
@@ -473,9 +477,32 @@
     .docs-card:hover { border-color: var(--border-2); }
 
     .docs-card .card-icon {
-      font-size: 24px;
-      margin-bottom: 10px;
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: grid; place-items: center;
+      margin-bottom: 12px;
     }
+
+    .docs-card .card-icon svg {
+      width: 18px; height: 18px;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .docs-card .card-icon.ic-red { background: var(--red-dim); }
+    .docs-card .card-icon.ic-red svg { stroke: var(--red); }
+    .docs-card .card-icon.ic-orange { background: var(--orange-dim); }
+    .docs-card .card-icon.ic-orange svg { stroke: var(--orange); }
+    .docs-card .card-icon.ic-blue { background: var(--blue-dim); }
+    .docs-card .card-icon.ic-blue svg { stroke: var(--blue); }
+    .docs-card .card-icon.ic-green { background: var(--green-dim); }
+    .docs-card .card-icon.ic-green svg { stroke: var(--green); }
+    .docs-card .card-icon.ic-accent { background: var(--accent-glow); }
+    .docs-card .card-icon.ic-accent svg { stroke: var(--accent); }
+    .docs-card .card-icon.ic-cyan { background: rgba(6, 182, 212, 0.12); }
+    .docs-card .card-icon.ic-cyan svg { stroke: var(--cyan); }
 
     .docs-card h4 {
       font-size: 14px;
@@ -764,7 +791,7 @@
         <div class="bots-title">Active Agents (3)</div>
         <div class="bot">
           <div class="bot-head">
-            <div class="bot-ico risk">&#9888;&#65039;</div>
+            <div class="bot-ico risk"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
             <div class="bot-info"><div class="bot-name">Risk Bot</div><div class="bot-sub">On-chain collateral protection</div></div>
           </div>
           <div class="bot-nums">
@@ -775,7 +802,7 @@
         </div>
         <div class="bot">
           <div class="bot-head">
-            <div class="bot-ico whale">&#128011;</div>
+            <div class="bot-ico whale"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg></div>
             <div class="bot-info"><div class="bot-name">Whale Bot</div><div class="bot-sub">Large transfer tracker</div></div>
           </div>
           <div class="bot-nums">
@@ -786,7 +813,7 @@
         </div>
         <div class="bot">
           <div class="bot-head">
-            <div class="bot-ico mev">&#128737;&#65039;</div>
+            <div class="bot-ico mev"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
             <div class="bot-info"><div class="bot-name">MEV Shield</div><div class="bot-sub">Sandwich & frontrun defense</div></div>
           </div>
           <div class="bot-nums">
@@ -867,32 +894,32 @@
         <h2>What Can You Build?</h2>
         <div class="docs-grid">
           <div class="docs-card">
-            <div class="card-icon">&#9888;&#65039;</div>
+            <div class="card-icon ic-red"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
             <h4>Liquidation Protection</h4>
             <p>Auto-add collateral before you get liquidated. React to risk signals while the block is still in Proposed stage.</p>
           </div>
           <div class="docs-card">
-            <div class="card-icon">&#128737;&#65039;</div>
+            <div class="card-icon ic-orange"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
             <h4>MEV Shield</h4>
             <p>Detect sandwich attacks on your pending swaps. Get warned before the attacking tx is finalized.</p>
           </div>
           <div class="docs-card">
-            <div class="card-icon">&#128011;</div>
+            <div class="card-icon ic-blue"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
             <h4>Whale Tracker</h4>
             <p>Get notified instantly when large transfers happen. Track whale movements before market reacts.</p>
           </div>
           <div class="docs-card">
-            <div class="card-icon">&#128200;</div>
+            <div class="card-icon ic-green"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
             <h4>Portfolio Rebalancer</h4>
             <p>Automatically hedge or rebalance positions when significant market-moving transactions are detected.</p>
           </div>
           <div class="docs-card">
-            <div class="card-icon">&#128176;</div>
+            <div class="card-icon ic-accent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16 8l-4 4-4-4"/><path d="M12 12v6"/></svg></div>
             <h4>Arbitrage Scanner</h4>
             <p>Spot price dislocations across pools. See large swaps before they're finalized and find opportunities.</p>
           </div>
           <div class="docs-card">
-            <div class="card-icon">&#128226;</div>
+            <div class="card-icon ic-cyan"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
             <h4>Alert System</h4>
             <p>Build notification bots for Telegram, Discord, or any platform. Keep your community informed in real-time.</p>
           </div>
